@@ -29,6 +29,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 
 public class CloneApp extends Application {
@@ -190,21 +192,22 @@ public class CloneApp extends Application {
     }
 
     private void startScreenSharing() {
-        executorService.execute(() -> {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> {
             try {
-                while (clientSocket != null && !clientSocket.isClosed()) {
+                if (clientSocket != null && !clientSocket.isClosed()) {
                     BufferedImage screenCapture = captureScreen();
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     ImageIO.write(screenCapture, "jpg", baos);
                     String encodedImage = Base64.getEncoder().encodeToString(baos.toByteArray());
                     clientOut.println(encodedImage);
-                    Thread.sleep(10);  // Adjust this delay as needed
                 }
-            } catch (IOException | AWTException | InterruptedException e) {
+            } catch (IOException | AWTException e) {
                 Platform.runLater(() -> System.err.println("Error during screen sharing: " + e.getMessage()));
             }
-        });
+        }, 0, 100, TimeUnit.MILLISECONDS);  // Adjust the rate as needed
     }
+
 
     private BufferedImage captureScreen() throws AWTException {
         Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
