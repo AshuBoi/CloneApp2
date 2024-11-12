@@ -1,4 +1,3 @@
-
 # Remote VNC Connect Application - Setup Guide
 
 This guide will help you set up the Remote VNC Connect Application. You'll learn how to add JavaFX to IntelliJ, run the broker server, and connect two systems using the application.
@@ -124,10 +123,8 @@ For **Ethernet Connection**:
 
 ### 3.2 Running the Java Application
 
-### 3.3 Running the Java Application
-
 1. **Open the project in IntelliJ IDEA**.
-2. **Run the ********************`CloneApp`******************** Java class**.
+2. **Run the `CloneApp` Java class**.
 
 ### 3.4 Hosting a Session
 
@@ -156,6 +153,50 @@ The Remote VNC Connect Application allows the **host's screen** to be shared wit
 - **Performance**: The screen-sharing quality and responsiveness depend on the network speed. Using an Ethernet connection will provide a smoother experience compared to Wi-Fi.
 - **Full Desktop Access**: The entire desktop is accessible, which means the client has full visibility and control. Be cautious when sharing sensitive information.
 
+## How the Broker Server Works in This Setup
+
+### Broker Server Role
+
+- The broker server (running at `http://localhost:3000`) acts as an intermediary to help the client (Laptop B) discover the host (Laptop A).
+- The broker server provides a session code for the host. The client uses this session code to obtain the IP address and port of the host.
+
+### Localhost vs. Network Address
+
+- The broker server runs on `localhost:3000` on the machine it is hosted on. However, for the broker server to be accessible by other devices, **`localhost`** should be replaced by the **local IP address** of the machine where the broker server is running.
+- For example, if Laptop A's IP address is `192.168.1.10`, then the broker server should be accessed at `http://192.168.1.10:3000` by other devices.
+
+### Making the Broker Server Accessible to Both Devices
+
+1. **Update Broker Server URL**: When running the application, instead of `localhost`, use the local IP address of the machine hosting the broker server.
+   - Example: If the broker server is running on Laptop A, use `http://192.168.1.10:3000` as the URL in both the host and client applications.
+
+2. **Steps to Ensure Connectivity**:
+   - **Identify the Local IP Address**:
+     - On the host laptop (where the broker server runs), find the local IP address.
+     - On Windows, use `ipconfig`.
+     - On Mac/Linux, use `ifconfig` or `hostname -I`.
+   - **Update the Broker Server URL**:
+     - Replace `localhost` with the actual IP address in the application where it registers and connects with the broker server:
+       ```java
+       URL url = new URL("http://192.168.1.10:3000/registerHost");
+       ```
+   - **Host and Client Network**:
+     - Ensure both the host and client laptops are connected to the same local network (either via Wi-Fi or Ethernet).
+   - **Firewall and Router Settings**:
+     - Ensure that the firewall allows traffic on port `3000`.
+     - Make sure there are no restrictions preventing the broker server from being accessed on the local network.
+
+### Summary of the Workflow
+
+- **Host Laptop (Laptop A)**:
+  - Runs the broker server on port `3000` (using its local IP address).
+  - Registers the session and provides a session code.
+- **Client Laptop (Laptop B)**:
+  - Uses the session code to query the broker server (using the IP address of Laptop A) and retrieves the host's IP address and port.
+  - Connects to the host using the details provided by the broker server.
+
+This way, the broker server becomes accessible to both laptops on the same network, and they can use it to establish the connection smoothly.
+
 ## Restrictions and Network Requirements
 
 - **Same Network Connection**: If the host and client are connected via the same Wi-Fi or Ethernet network, no additional setup is needed. The broker server will be accessible as long as both devices are on the same local network.
@@ -170,10 +211,10 @@ The Remote VNC Connect Application allows the **host's screen** to be shared wit
    - On Linux, use `ufw` to allow the port: `sudo ufw allow 3000`.
 
 2. **Router Configuration**:
-   - If using a router, make sure that port 3000 is not blocked and is properly forwarded if needed. The broker server runs on `http://<broker-server-ip>:3000`, so ensure that this address is accessible.
+   - If using a router, make sure that port 3000 is not blocked and is properly forwarded if needed.
 
 3. **Network Restrictions**:
-   - Ensure that the network (e.g., office network) does not have restrictions blocking port 3000. You may need to contact your network administrator. The broker server address is `http://<broker-server-ip>:3000`, and it should be reachable from both the host and client.
+   - Ensure that the network (e.g., office network) does not have restrictions blocking port 3000. You may need to contact your network administrator.
 
 4. **Testing Connectivity**:
    - Test the broker server by accessing `http://<broker-server-ip>:3000` from both the host and client systems in a web browser to ensure it's reachable.
